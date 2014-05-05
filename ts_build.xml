@@ -7,7 +7,7 @@
            http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd">
 
     <bean id="ts_federation_uri" class="java.lang.String">
-        <constructor-arg value="http://www.testshib.org/"/>
+        <constructor-arg value="http://www.testshib.org/fed"/>
     </bean>
 
     <!-- First, we define the stages for our pipeline -->
