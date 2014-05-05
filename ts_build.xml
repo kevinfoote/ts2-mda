@@ -6,6 +6,10 @@
            http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
            http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd">
 
+    <bean id="ts_federation_uri" class="java.lang.String">
+        <constructor-arg value="http://www.testshib.org/"/>
+    </bean>
+
     <!-- First, we define the stages for our pipeline -->
     <bean id="source" class="net.shibboleth.metadata.dom.DOMFilesystemSourceStage">
         <property name="id" value="source"/>
@@ -18,6 +22,11 @@
             </bean>
         </property>
     </bean>
+   
+    <!-- use to remove EntitiesDescriptor elements -->
+    <bean id="disassemble" class="net.shibboleth.metadata.dom.saml.EntitiesDescriptorDisassemblerStage">
+        <property name="id" value="disassemble"/>
+    </bean>
 
     <bean id="removeInvalidContactPerson" class="net.shibboleth.metadata.dom.saml.ContactPersonFilterStage">
         <property name="id" value="removeInvalidContactPerson"/>
@@ -29,6 +38,7 @@
     
     <bean id="createEntitiesDescriptor" class="net.shibboleth.metadata.dom.saml.EntitiesDescriptorAssemblerStage">
         <property name="id" value="createEntitiesDescriptor"/>
+        <property name="name" ref="ts_federation_uri"/>
     </bean>
     
     <bean id="generateContentReferenceId" class="net.shibboleth.metadata.dom.saml.GenerateIdStage">
@@ -68,6 +78,7 @@
         <property name="stages">
             <list>
                 <ref bean="source"/>
+                <ref bean="disassemble"/>
                 <ref bean="removeInvalidContactPerson"/>
                 <ref bean="removeOrganization"/>
                 <ref bean="createEntitiesDescriptor"/>
