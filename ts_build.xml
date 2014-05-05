@@ -38,7 +38,7 @@
     
     <bean id="createEntitiesDescriptor" class="net.shibboleth.metadata.dom.saml.EntitiesDescriptorAssemblerStage">
         <property name="id" value="createEntitiesDescriptor"/>
-        <property name="name" ref="ts_federation_uri"/>
+        <property name="descriptorName" ref="ts_federation_uri"/>
     </bean>
     
     <bean id="generateContentReferenceId" class="net.shibboleth.metadata.dom.saml.GenerateIdStage">
