@@ -10,6 +10,14 @@
         <constructor-arg value="http://www.testshib.org/fed"/>
     </bean>
 
+    <bean id="ts_prod_aggregate" class="java.lang.String">
+        <constructor-arg value="/var/www/html/metadata.new/testshib-two-aggregate.xml"/>
+    </bean>
+    
+    <bean id="ts_prov_aggregate" class="java.lang.String">
+        <constructor-arg value="/var/www/html/metadata.new/testshib-providers-aggregate.xml"/>
+    </bean>
+
     <!-- First, we define the stages for our pipeline -->
     <bean id="source" class="net.shibboleth.metadata.dom.DOMFilesystemSourceStage">
         <property name="id" value="source"/>
@@ -23,7 +31,6 @@
         </property>
     </bean>
    
-    <!-- use to remove EntitiesDescriptor elements -->
     <bean id="disassemble" class="net.shibboleth.metadata.dom.saml.EntitiesDescriptorDisassemblerStage">
         <property name="id" value="disassemble"/>
     </bean>
@@ -60,11 +67,11 @@
     </bean>
 -->
     
-    <bean id="serialize" class="net.shibboleth.metadata.pipeline.SerializationStage">
+    <bean id="serializeProd" class="net.shibboleth.metadata.pipeline.SerializationStage">
         <property name="id" value="serializeIdPs"/>
         <property name="outputFile">
             <bean class="java.io.File">
-                <constructor-arg value="/opt/tsAggregateOut.xml"/>
+                <constructor-arg ref="ts_prod_aggregate"/>
             </bean>
         </property>
         <property name="serializer">
@@ -73,7 +80,7 @@
     </bean>    
      
     <!-- Next we define a pipeline with all the stages in it -->
-    <bean id="main" class="net.shibboleth.metadata.pipeline.SimplePipeline" init-method="initialize">
+    <bean id="prod" class="net.shibboleth.metadata.pipeline.SimplePipeline" init-method="initialize">
         <property name="id" value="tspipeline"/>
         <property name="stages">
             <list>
@@ -83,7 +90,7 @@
                 <ref bean="removeOrganization"/>
                 <ref bean="createEntitiesDescriptor"/>
                 <ref bean="generateContentReferenceId" />
-                <ref bean="serialize" />
+                <ref bean="serializeProd" />
             </list>
         </property>
     </bean>
