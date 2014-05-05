@@ -10,12 +10,16 @@
         <constructor-arg value="http://www.testshib.org/fed"/>
     </bean>
 
+    <bean id="ts_federation_uri" class="java.lang.String">
+        <constructor-arg value="http://www.testshib.org/providers"/>
+    </bean>
+
     <bean id="ts_prod_aggregate" class="java.lang.String">
         <constructor-arg value="/var/www/html/metadata.new/testshib-two-aggregate.xml"/>
     </bean>
     
     <bean id="ts_prov_aggregate" class="java.lang.String">
-        <constructor-arg value="/var/www/html/metadata.new/testshib-providers-aggregate.xml"/>
+        <constructor-arg value="/var/www/html/metadata.new/testshib-two-metadata.xml"/>
     </bean>
 
     <!-- First, we define the stages for our pipeline -->
@@ -79,13 +83,38 @@
         </property>
     </bean>    
      
-    <!-- Next we define a pipeline with all the stages in it -->
+    <!--
+
+    * Pipeline to create the current federation aggregate. 
+    * Testshib keeps an entity active for 30 days
+
+    -->
     <bean id="prod" class="net.shibboleth.metadata.pipeline.SimplePipeline" init-method="initialize">
-        <property name="id" value="tspipeline"/>
+        <property name="id" value="production_pipeline"/>
         <property name="stages">
             <list>
                 <ref bean="source"/>
                 <ref bean="disassemble"/>
+                <ref bean="removeInvalidContactPerson"/>
+                <ref bean="removeOrganization"/>
+                <ref bean="createEntitiesDescriptor"/>
+                <ref bean="generateContentReferenceId" />
+                <ref bean="serializeProd" />
+            </list>
+        </property>
+    </bean>
+
+    <!--
+
+    * Pipeline to create the current TestShib providers aggregate. 
+    * Our providers are idp.testshib.org and sp.testshib.org
+
+    -->
+    <bean id="ts_providers" class="net.shibboleth.metadata.pipeline.SimplePipeline" init-method="initialize">
+        <property name="id" value="providers_pipeline"/>
+        <property name="stages">
+            <list>
+                <ref bean="source"/>
                 <ref bean="removeInvalidContactPerson"/>
                 <ref bean="removeOrganization"/>
                 <ref bean="createEntitiesDescriptor"/>
