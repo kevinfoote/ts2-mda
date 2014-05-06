@@ -90,7 +90,7 @@
             </bean>
         </property>
         <property name="serializer">
-            <bean id="domSerializer" class="net.shibboleth.metadata.dom.DOMElementSerializer" />
+            <bean id="domSerializerProd" class="net.shibboleth.metadata.dom.DOMElementSerializer" />
         </property>
     </bean>    
 
@@ -102,7 +102,7 @@
             </bean>
         </property>
         <property name="serializer">
-            <bean id="domSerializer" class="net.shibboleth.metadata.dom.DOMElementSerializer" />
+            <bean id="domSerializerProv" class="net.shibboleth.metadata.dom.DOMElementSerializer" />
         </property>
     </bean>    
      
