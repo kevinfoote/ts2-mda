@@ -10,21 +10,20 @@
         <constructor-arg value="http://www.testshib.org/fed"/>
     </bean>
 
-    <bean id="ts_federation_uri" class="java.lang.String">
+    <bean id="ts_providers_uri" class="java.lang.String">
         <constructor-arg value="http://www.testshib.org/providers"/>
     </bean>
 
     <bean id="ts_prod_aggregate" class="java.lang.String">
-        <constructor-arg value="/var/www/html/metadata.new/testshib-two-aggregate.xml"/>
+        <constructor-arg value="/var/www/html/metadata.new/testshib-aggregate.xml"/>
     </bean>
     
     <bean id="ts_prov_aggregate" class="java.lang.String">
-        <constructor-arg value="/var/www/html/metadata.new/testshib-two-metadata.xml"/>
+        <constructor-arg value="/var/www/html/metadata.new/testshib-providers.xml"/>
     </bean>
 
-    <!-- First, we define the stages for our pipeline -->
-    <bean id="source" class="net.shibboleth.metadata.dom.DOMFilesystemSourceStage">
-        <property name="id" value="source"/>
+    <bean id="source1" class="net.shibboleth.metadata.dom.DOMFilesystemSourceStage">
+        <property name="id" value="source1"/>
         <property name="parserPool">
             <bean class="net.shibboleth.utilities.java.support.xml.BasicParserPool" init-method="initialize"/>
         </property>
@@ -35,6 +34,18 @@
         </property>
     </bean>
    
+    <bean id="source2" class="net.shibboleth.metadata.dom.DOMFilesystemSourceStage">
+        <property name="id" value="source2"/>
+        <property name="parserPool">
+            <bean class="net.shibboleth.utilities.java.support.xml.BasicParserPool" init-method="initialize"/>
+        </property>
+        <property name="source">
+            <bean class="java.io.File">
+                <constructor-arg value="/opt/testshib-entities-metadata/"/>
+            </bean>
+        </property>
+    </bean>
+
     <bean id="disassemble" class="net.shibboleth.metadata.dom.saml.EntitiesDescriptorDisassemblerStage">
         <property name="id" value="disassemble"/>
     </bean>
@@ -82,6 +93,18 @@
             <bean id="domSerializer" class="net.shibboleth.metadata.dom.DOMElementSerializer" />
         </property>
     </bean>    
+
+    <bean id="serializeProviders" class="net.shibboleth.metadata.pipeline.SerializationStage">
+        <property name="id" value="serializeIdPs"/>
+        <property name="outputFile">
+            <bean class="java.io.File">
+                <constructor-arg ref="ts_prov_aggregate"/>
+            </bean>
+        </property>
+        <property name="serializer">
+            <bean id="domSerializer" class="net.shibboleth.metadata.dom.DOMElementSerializer" />
+        </property>
+    </bean>    
      
     <!--
 
@@ -93,7 +116,8 @@
         <property name="id" value="production_pipeline"/>
         <property name="stages">
             <list>
-                <ref bean="source"/>
+                <ref bean="source1"/>
+                <ref bean="source2"/>
                 <ref bean="disassemble"/>
                 <ref bean="removeInvalidContactPerson"/>
                 <ref bean="removeOrganization"/>
@@ -110,16 +134,16 @@
     * Our providers are idp.testshib.org and sp.testshib.org
 
     -->
-    <bean id="ts_providers" class="net.shibboleth.metadata.pipeline.SimplePipeline" init-method="initialize">
+    <bean id="providers" class="net.shibboleth.metadata.pipeline.SimplePipeline" init-method="initialize">
         <property name="id" value="providers_pipeline"/>
         <property name="stages">
             <list>
-                <ref bean="source"/>
+                <ref bean="source2"/>
                 <ref bean="removeInvalidContactPerson"/>
                 <ref bean="removeOrganization"/>
                 <ref bean="createEntitiesDescriptor"/>
                 <ref bean="generateContentReferenceId" />
-                <ref bean="serializeProd" />
+                <ref bean="serializeProviders" />
             </list>
         </property>
     </bean>
