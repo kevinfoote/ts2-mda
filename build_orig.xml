@@ -3,14 +3,11 @@
 <!--
 	TestShib Federation metadata processing. 
 	
-	* "ant process" .. generates 3 files: 
-                testshib-md-aggregate.xml
-                testshib-md-archive.xml
-                testshib-md-providers.xml
+	* "ant process" generates the other files from the master file, and
+	  signs as appropriate.  Requires the keystore password.
 	  
-	* "ant sign" .. this will someday produce 
-               signed metadat using the above files.
-
+	* "ant push" sends all files to the remote site, and requires
+	  the remote site password.
 -->
 <project default="process">
     
@@ -48,16 +45,16 @@
 
 		Each stream has its own unsigned file, as follows:
 	-->
-	<property name="md.prod.unsigned"        value="testshib-md-aggregate.xml"/>
-	<property name="md.archive.unsigned"     value="testshib-md-archive.xml"/>
-	<property name="md.providers.unsigned"   value="testshib-md-providers.xml"/>
+	<property name="md.prod.unsigned"        value="testshib-metadata-aggregate.xml"/>
+	<property name="md.providers.unsigned"   value="testshib-two-metadata.xml"/>
+	<property name="md.archive.unsigned"     value="testshib-metadata-archive.xml"/>
 	
 	<!--
 		Each stream has its own signed file. (IF WE GET THAT FAR)
 	-->
-	<property name="md.prod.signed"        value="testshib-md-aggregate-signed.xml"/>
-	<property name="md.archive.signed"     value="testshib-md-archive-signed.xml"/>
-	<property name="md.providers.signed"   value="testshib-md-providers-signed.xml"/>
+	<property name="md.prod.signed"        value="testshib-metadata-aggregate-signed.xml"/>
+	<property name="md.providers.signed"   value="testshib-two-metadata-signed.xml"/>
+	<property name="md.archive.signed"     value="testshib-metadata-archive-signed.xml"/>
 	
 	<!--
 		Null device location.
@@ -165,7 +162,7 @@
         <!--
         Unsigned metadata generation for the UK Federation.
         -->
-	<target name="gen.ts.unsigned">
+	<target name="gen.tsAggregate.unsigned">
 		<echo>Generating unsigned UK metadata files.</echo>
 		
         <!--

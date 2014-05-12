@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Verb definitions for this channel.
+    Action definitions for this channel.
 -->
 <beans xmlns="http://www.springframework.org/schema/beans"
     default-lazy-init="true"
@@ -16,11 +16,6 @@
         Import commonly used beans.
     -->
     <import resource="classpath:common-beans.xml"/>
-        
-    <!--
-        Import channel-specific beans.
-    -->
-    <import resource="classpath:ts_aggregate/beans.xml"/>
     
     <!--
         Serialise into this channel's "imported" aggregate file.
