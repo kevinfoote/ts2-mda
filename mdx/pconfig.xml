@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans default-init-method="initialize"
+    xmlns="http://www.springframework.org/schema/beans"    
+    xmlns:c="http://www.springframework.org/schema/c"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="
+           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd">
+
+    <!--
+        Java class parent shorthand beans.
+    -->
+    <bean id="String" abstract="true" class="java.lang.String"/>
+    <bean id="QName" abstract="true" class="javax.xml.namespace.QName"/>
+
+    <!--
+        Define some beans to use later 
+    -->
+    <bean id="parserPool" class="net.shibboleth.utilities.java.support.xml.BasicParserPool" />
+
+    <bean id="domSerializer" class="net.shibboleth.metadata.dom.DOMElementSerializer" />
+
+    <bean id="component_parent" abstract="true" init-method="initialize"/>
+
+    <bean id="stage_parent" abstract="true" parent="component_parent"/>
+
+    <bean id="FileSystemResource" abstract="true" parent="component_parent"
+          class="net.shibboleth.utilities.java.support.resource.FilesystemResource"/>
+    <bean id="ClassPathResource" abstract="true" parent="component_parent"
+        class="net.shibboleth.utilities.java.support.resource.ClasspathResource"/>
+
+    <util:list id="errorStatusClass">
+        <value>#{T(net.shibboleth.metadata.ErrorStatus)}</value>
+    </util:list>
+    
+    <bean id="logItemErrors" class="net.shibboleth.metadata.pipeline.StatusMetadataLoggingStage"
+          p:id="logItemErrors" p:selectionRequirements-ref="errorStatusClass"/>
+    
+    <bean id="removeErrorItems" class="net.shibboleth.metadata.pipeline.ItemMetadataFilterStage"
+          p:id="removeErrorItems" p:selectionRequirements-ref="errorStatusClass" />
+
+    <!--
+        Define some Strings to use. 
+    -->
+    <bean id="schemaDirectory" parent="String"> 
+        <constructor-arg value="/opt/schema-files/saml-schema-metadata-2.0.xsd" />
+    </bean>
+
+    <bean id="ts_federation_uri" parent="String">
+        <constructor-arg value="http://www.testshib.org/fed/p"/>
+    </bean>
+
+    <bean id="ts_providers_uri" parent="String">
+        <constructor-arg value="http://www.testshib.org/fed/e"/>
+    </bean>
+
+    <bean id="ts_archive_uri" parent="String">
+        <constructor-arg value="http://www.testshib.org/fed/a"/>
+    </bean>
+
+    <bean id="ts_prod_aggregate" parent="String">
+        <constructor-arg value="/var/www/html/metadata.new/testshib-md-aggregate.xml"/>
+    </bean>
+
+    <bean id="ts_archive_aggregate" parent="String">
+        <constructor-arg value="/var/www/html/metadata.new/testshib-md-archive.xml"/>
+    </bean>
+    
+    <bean id="ts_self_aggregate" parent="String">
+        <constructor-arg value="/var/www/html/metadata.new/testshib-md-providers.xml"/>
+    </bean>
+
+    <bean id="prod_mdSourceDir" parent="String">
+        <constructor-arg value="/opt/testshib-user-metadata/"/>
+    </bean>
+
+    <bean id="archive_mdSourceDir" parent="String">
+        <constructor-arg value="/opt/testshib-user-mdarchive/"/>
+    </bean>
+
+    <bean id="self_mdSourceDir" parent="String">
+        <constructor-arg value="/opt/testshib-entities-metadata/"/>
+    </bean>
+
+
+    <!-- 
+        Define _source_ stages (buckets) for TestShib metadata 
+    -->
+    <bean id="readProductionSource" class="net.shibboleth.metadata.dom.DOMFilesystemSourceStage"
+        p:id="readProductionSource" p:parserPool-ref="parserPool" p:source-ref="prod_mdSourceDir"/>
+
+    <bean id="readArchiveSource" class="net.shibboleth.metadata.dom.DOMFilesystemSourceStage"
+        p:id="readArchiveSource" p:parserPool-ref="parserPool" p:source-ref="archive_mdSourceDir"/>
+
+    <bean id="readSelfSource" class="net.shibboleth.metadata.dom.DOMFilesystemSourceStage"
+        p:id="readSelfSource" p:parserPool-ref="parserPool" p:source-ref="self_mdSourceDir"/>
+
+
+    <!-- 
+       
+        Define _operational_ stages for the XML processing
+         . work to be done on each piece of metadata 
+         . work to be done on the conglomerate as a whole
+    -->
+
+    <!-- -->
+    <bean id="disassembleEntitiesDescriptor" class="net.shibboleth.metadata.dom.saml.EntitiesDescriptorDisassemblerStage" 
+        p:id="disassembleEntitiesDescriptor"/>
+
+    <!-- -->
+    <bean id="removeInvalidContactPerson" class="net.shibboleth.metadata.dom.saml.ContactPersonFilterStage"
+        p:id="removeInvalidContactPerson"/>
+    
+    <!-- -->
+    <bean id="removeOrganization" class="net.shibboleth.metadata.dom.saml.RemoveOrganizationStage"
+        p:id="removeOrganization"/>
+
+    <!-- -->
+    <bean id="generateContentReferenceId" class="net.shibboleth.metadata.dom.saml.GenerateIdStage"
+        p:id="generateContentReferenceId"/>
+
+    <!-- -->
+    <bean id="XSLTransformationStage" abstract="true" parent="stage_parent"
+        class="net.shibboleth.metadata.dom.XSLTransformationStage"/>
+
+    <!-- -->
+    <bean id="XSLValidationStage" abstract="true" parent="stage_parent"
+        class="net.shibboleth.metadata.dom.XSLValidationStage"/>
+
+    <!-- -->
+    <bean id="EmptyContainerStrippingStage" abstract="true" parent="stage_parent"
+        class="net.shibboleth.metadata.dom.EmptyContainerStrippingStage"/>
+
+
+    <!-- Federation EntitiesDescriptor -->
+    <bean id="createEntitiesDescriptorProd" class="net.shibboleth.metadata.dom.saml.EntitiesDescriptorAssemblerStage"
+        p:id="createEntitiesDescriptorProd">
+        <property name="descriptorName" ref="ts_federation_uri"/>
+    </bean>
+
+    <!-- Archived EntitiesDescriptor -->
+    <bean id="createEntitiesDescriptorArchive" class="net.shibboleth.metadata.dom.saml.EntitiesDescriptorAssemblerStage"
+        p:id="createEntitiesDescriptorArchive">
+        <property name="descriptorName" ref="ts_archive_uri"/>
+    </bean>
+
+    <!-- Self EntitiesDescriptor-->
+    <bean id="createEntitiesDescriptorSelf" class="net.shibboleth.metadata.dom.saml.EntitiesDescriptorAssemblerStage"
+        p:id="createEntitiesDescriptorSelf">
+        <property name="descriptorName" ref="ts_providers_uri"/>
+    </bean>
+
+    <!-- -->
+    <bean id="validateSchema" class="net.shibboleth.metadata.dom.XMLSchemaValidationStage"
+        p:id="validateSchema">
+        <property name="schemaResources">
+            <util:list>
+                <bean class="net.shibboleth.utilities.java.support.resource.FilesystemResource">
+                    <constructor-arg ref="schemaDirectory" />
+                </bean>
+            </util:list>
+        </property>
+    </bean>
+
+    <!--
+        A pipeline stage that can be used before serialisation to normalise the namespaces
+        used in an XML document.
+    -->
+    <bean id="normalizeNamespaces" parent="XSLTransformationStage"
+        p:id="normalizeNamespaces">
+        <property name="XSLResource">
+            <bean parent="FileSystemResource">
+                <!--constructor-arg value="#{ systemProperties['basedir'] }/mdx/uk/ns_norm_uk.xsl"/-->
+                <constructor-arg value="ns_norm.xsl"/>
+            </bean>
+        </property>
+    </bean>
+
+    <!-- -->
+    <bean id="commonProcessing" class="net.shibboleth.metadata.pipeline.CompositeStage"
+        p:id="commonProcessing">
+        <property name="composedStages">
+            <util:list>
+                <ref bean="logItemErrors" />
+                <!--ref bean="termineOnInvalidSignature" /-->
+                <!--ref bean="validateValidUntil" /-->
+                <ref bean="removeInvalidContactPerson"/>
+                <ref bean="removeOrganization"/>
+                <ref bean="disassembleEntitiesDescriptor" />
+                <ref bean="validateSchema" />
+            </util:list>
+        </property>
+    </bean>
+     
+    <!-- 
+    -->
+
+    <!--
+        ******************************************
+        *** P I P E L I N E S   D E F I N E D  ***
+        ******************************************
+    -->
+
+    <!--
+        * Pipeline to create the current federation aggregate. 
+        * Testshib keeps an entity active for 30 days
+    -->
+    <bean id="serializeProd" class="net.shibboleth.metadata.pipeline.SerializationStage"
+        p:id="serializeProd" p:outputFile-ref="ts_prod_aggregate" p:serializer-ref="domSerializer" />
+
+    <bean id="production" class="net.shibboleth.metadata.pipeline.SimplePipeline" init-method="initialize"
+        p:id="production">
+        <property name="stages">
+            <list>
+                <ref bean="readProductionSource"/>
+                <ref bean="commonProcessing" />
+                <ref bean="createEntitiesDescriptorProd" />
+                <ref bean="normalizeNamespaces" />
+                <ref bean="serializeProd" />
+            </list>
+        </property>
+    </bean>
+
+    <!--
+        * Pipeline to create the current TestShib providers aggregate. 
+        * Our providers are idp.testshib.org and sp.testshib.org
+    -->
+    <bean id="serializeSelf" class="net.shibboleth.metadata.pipeline.SerializationStage"
+        p:id="serializeSelf" p:outputFile-ref="ts_self_aggregate" p:serializer-ref="domSerializer" />
+
+    <bean id="providers" class="net.shibboleth.metadata.pipeline.SimplePipeline" init-method="initialize"
+        p:id="providers">
+        <property name="stages">
+            <list>
+                <ref bean="readSelfSource"/>
+                <ref bean="commonProcessing" />
+                <ref bean="createEntitiesDescriptorSelf" />
+                <ref bean="normalizeNamespaces" />
+                <ref bean="serializeSelf" />
+            </list>
+        </property>
+    </bean>
+
+    <!--
+        * Pipeline to create the TestShib archived aggregate. 
+        * These are all entities that have joined TestShib.
+        * Warning this aggregate will be come very large. 
+    -->
+    <bean id="serializeArchive" class="net.shibboleth.metadata.pipeline.SerializationStage"
+        p:id="serializeArchive" p:outputFile-ref="ts_archive_aggregate" p:serializer-ref="domSerializer" />
+
+    <bean id="archive" class="net.shibboleth.metadata.pipeline.SimplePipeline" init-method="initialize"
+        p:id="archive">
+        <property name="stages">
+            <list>
+                <ref bean="readArchiveSource"/>
+                <ref bean="commonProcessing" />
+                <ref bean="createEntitiesDescriptorArchive" />
+                <ref bean="normalizeNamespaces" />
+                <ref bean="serializeArchive" />
+            </list>
+        </property>
+    </bean>
+
+</beans>
