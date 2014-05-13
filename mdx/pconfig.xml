@@ -91,21 +91,40 @@
 
 
     <!-- 
+       
         Define _operational_ stages for the XML processing
          . work to be done on each piece of metadata 
          . work to be done on the conglomerate as a whole
-   -->
+    -->
+
+    <!-- -->
     <bean id="disassembleEntitiesDescriptor" class="net.shibboleth.metadata.dom.saml.EntitiesDescriptorDisassemblerStage" 
         p:id="disassembleEntitiesDescriptor"/>
 
+    <!-- -->
     <bean id="removeInvalidContactPerson" class="net.shibboleth.metadata.dom.saml.ContactPersonFilterStage"
         p:id="removeInvalidContactPerson"/>
     
+    <!-- -->
     <bean id="removeOrganization" class="net.shibboleth.metadata.dom.saml.RemoveOrganizationStage"
         p:id="removeOrganization"/>
 
+    <!-- -->
     <bean id="generateContentReferenceId" class="net.shibboleth.metadata.dom.saml.GenerateIdStage"
         p:id="generateContentReferenceId"/>
+
+    <!-- -->
+    <bean id="XSLTransformationStage" abstract="true" parent="stage_parent"
+        class="net.shibboleth.metadata.dom.XSLTransformationStage"/>
+
+    <!-- -->
+    <bean id="XSLValidationStage" abstract="true" parent="stage_parent"
+        class="net.shibboleth.metadata.dom.XSLValidationStage"/>
+
+    <!-- -->
+    <bean id="EmptyContainerStrippingStage" abstract="true" parent="stage_parent"
+        class="net.shibboleth.metadata.dom.EmptyContainerStrippingStage"/>
+
 
     <!-- Federation EntitiesDescriptor -->
     <bean id="createEntitiesDescriptorProd" class="net.shibboleth.metadata.dom.saml.EntitiesDescriptorAssemblerStage"
@@ -136,7 +155,21 @@
             </util:list>
         </property>
     </bean>
-    
+
+    <!--
+        A pipeline stage that can be used before serialisation to normalise the namespaces
+        used in an XML document.
+    -->
+    <bean id="normaliseNamespaces" parent="XSLTransformationStage"
+        p:id="normaliseNamespaces">
+        <property name="XSLResource">
+            <bean parent="FileSystemResource">
+                <!--constructor-arg value="#{ systemProperties['basedir'] }/mdx/uk/ns_norm_uk.xsl"/-->
+                <constructor-arg value="ns_norm.xsl"/>
+            </bean>
+        </property>
+    </bean>
+
     <!-- -->
     <bean id="commonProcessing" class="net.shibboleth.metadata.pipeline.CompositeStage"
         p:id="commonProcessing">
@@ -144,19 +177,11 @@
             <util:list>
                 <ref bean="logItemErrors" />
                 <!--ref bean="termineOnInvalidSignature" /-->
-                <ref bean="validateValidUntil" />
+                <!--ref bean="validateValidUntil" /-->
                 <ref bean="removeInvalidContactPerson"/>
                 <ref bean="removeOrganization"/>
                 <ref bean="disassembleEntitiesDescriptor" />
                 <ref bean="validateSchema" />
-<!--
-                <ref bean="disassemble"/>
-                <ref bean="removeInvalidContactPerson"/>
-                <ref bean="removeOrganization"/>
-                <ref bean="createEntitiesDescriptor"/>
-                <ref bean="generateContentReferenceId" />
-                <ref bean="serializeProd" />
--->
             </util:list>
         </property>
     </bean>
@@ -167,18 +192,14 @@
     -->
 
     <!--
-
-        *****************************
-        *** Set up some pipelines ***
-        *****************************
-
+        ******************************************
+        *** P I P E L I N E S   D E F I N E D  ***
+        ******************************************
     -->
 
     <!--
-
-    * Pipeline to create the current federation aggregate. 
-    * Testshib keeps an entity active for 30 days
-
+        * Pipeline to create the current federation aggregate. 
+        * Testshib keeps an entity active for 30 days
     -->
     <bean id="serializeProd" class="net.shibboleth.metadata.pipeline.SerializationStage"
         p:id="serializeProd" p:outputFile-ref="ts_prod_aggregate" p:serializer-ref="domSerializer" />
@@ -190,16 +211,15 @@
                 <ref bean="readProductionSource"/>
                 <ref bean="commonProcessing" />
                 <ref bean="createEntitiesDescriptorProd" />
+                <ref bean="normalizeNamespaces" />
                 <ref bean="serializeProd" />
             </list>
         </property>
     </bean>
 
     <!--
-
-    * Pipeline to create the current TestShib providers aggregate. 
-    * Our providers are idp.testshib.org and sp.testshib.org
-
+        * Pipeline to create the current TestShib providers aggregate. 
+        * Our providers are idp.testshib.org and sp.testshib.org
     -->
     <bean id="serializeSelf" class="net.shibboleth.metadata.pipeline.SerializationStage"
         p:id="serializeSelf" p:outputFile-ref="ts_self_aggregate" p:serializer-ref="domSerializer" />
@@ -211,6 +231,7 @@
                 <ref bean="readSelfSource"/>
                 <ref bean="commonProcessing" />
                 <ref bean="createEntitiesDescriptorSelf" />
+                <ref bean="normalizeNamespaces" />
                 <ref bean="serializeSelf" />
             </list>
         </property>
