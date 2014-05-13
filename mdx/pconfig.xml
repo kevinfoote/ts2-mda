@@ -185,6 +185,7 @@
         <property name="composedStages">
             <util:list>
                 <ref bean="logItemErrors" />
+                <ref bean="removeErrorItems" />
                 <!--ref bean="termineOnInvalidSignature" /-->
                 <!--ref bean="validateValidUntil" /-->
                 <ref bean="removeInvalidContactPerson"/>
