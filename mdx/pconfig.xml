@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"    
+    default-init-method="initialize"
+    xmlns:c="http://www.springframework.org/schema/c"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="
+           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd">
+
+    <!--
+        Java class parent shorthand beans.
+    -->
+    <bean id="String" abstract="true" class="java.lang.String"/>
+    <bean id="QName" abstract="true" class="javax.xml.namespace.QName"/>
+
+    <!--
+        Define some beans to use later 
+    -->
+    <bean id="parserPool" class="net.shibboleth.utilities.java.support.xml.BasicParserPool" />
+
+    <bean id="domSerializer" class="net.shibboleth.metadata.dom.DOMElementSerializer" />
+
+    <util:list id="errorStatusClass">
+        <value>#{T(net.shibboleth.metadata.ErrorStatus)}</value>
+    </util:list>
+    
+    <bean id="logItemErrors" class="net.shibboleth.metadata.pipeline.StatusMetadataLoggingStage"
+          p:id="logItemErrors" p:selectionRequirements-ref="errorStatusClass"/>
+    
+    <bean id="removeErrorItems" class="net.shibboleth.metadata.pipeline.ItemMetadataFilterStage"
+          p:id="removeErrorItems" p:selectionRequirements-ref="errorStatusClass" />
+
+    <!--
+        Define some Strings to use. 
+    -->
+    <bean id="schemaDirectory" class="java.lang.String">
+        <constructor-arg value="/opt/schema-files/" />
+    </bean>
+
+    <bean id="ts_federation_uri" parent="String">
+        <constructor-arg value="http://www.testshib.org/fed/p"/>
+    </bean>
+
+    <bean id="ts_providers_uri" parent="String">
+        <constructor-arg value="http://www.testshib.org/fed/e"/>
+    </bean>
+
+    <bean id="ts_archive_uri" parent="String">
+        <constructor-arg value="http://www.testshib.org/fed/a"/>
+
+    <bean id="ts_prod_aggregate" parent="String">
+        <constructor-arg value="/var/www/html/metadata.new/testshib-md-aggregate.xml"/>
+    </bean>
+
+    <bean id="ts_archive_aggregate" parent="String">
+        <constructor-arg value="/var/www/html/metadata.new/testshib-md-archive.xml"/>
+    </bean>
+    
+    <bean id="ts_prov_aggregate" parent="String">
+        <constructor-arg value="/var/www/html/metadata.new/testshib-md-providers.xml"/>
+    </bean>
+
+    <bean id="prod_mdSourceDir" parent="String">
+        <constructor-arg value="/opt/testshib-user-metadata/"/>
+    </bean>
+
+    <bean id="archive_mdSourceDir" parent="String">
+        <constructor-arg value="/opt/testshib-user-mdarchive/"/>
+    </bean>
+
+    <bean id="self_mdSourceDir" parent="String">
+        <constructor-arg value="/opt/testshib-entities-metadata/"/>
+    </bean>
+
+    <!-- 
+        Define _source_ stages (buckets) for TestShib metadata 
+    -->
+
+    <bean id="readProductionSource" class="net.shibboleth.metadata.dom.DOMFilesystemSourceStage"
+        p:id="readProductionSource" p:parserPool-ref="parserPool" p:source-ref="prod_mdSourceDir"/>
+
+    <bean id="readArchiveSource" class="net.shibboleth.metadata.dom.DOMFilesystemSourceStage"
+        p:id="readArchiveSource" p:parserPool-ref="parserPool" p:source-ref="archive_mdSourceDir"/>
+
+    <bean id="readSelfSource" class="net.shibboleth.metadata.dom.DOMFilesystemSourceStage"
+        p:id="readSelfSource" p:parserPool-ref="parserPool" p:source-ref="self_mdSourceDir"/>
+
+    <!-- Define the pipeline for reading in local metadata and performing initial processing on it-->
+    <bean id="readLocalMetadta" class="net.shibboleth.metadata.dom.DOMFilesystemSourceStage"
+        p:id="readLocalMetadta" p:parserPool-ref="parserPool" p:source-ref="localMetadataDirectory"/>
+   
+
+    <!-- 
+        Define _operational_ stages for the XML processing
+    -->
+    <bean id="disassembleEntitiesDescriptor" class="net.shibboleth.metadata.dom.saml.EntitiesDescriptorDisassemblerStage" 
+        p:id="disassemble"/>
+
+    <bean id="removeInvalidContactPerson" class="net.shibboleth.metadata.dom.saml.ContactPersonFilterStage"
+        p:id="removeInvalidContactPerson"/>
+    
+    <bean id="removeOrganization" class="net.shibboleth.metadata.dom.saml.RemoveOrganizationStage"
+        p:id="removeOrganization"/>
+
+    <bean id="generateContentReferenceId" class="net.shibboleth.metadata.dom.saml.GenerateIdStage"
+        p:id="generateContentReferenceId"/>
+
+    <bean id="createEntitiesDescriptorProd" class="net.shibboleth.metadata.dom.saml.EntitiesDescriptorAssemblerStage"
+        p:id="createEntitiesDescriptorProd">
+        <property name="descriptorName" ref="ts_federation_uri"/>
+    </bean>
+
+    <bean id="createEntitiesDescriptorArchive" class="net.shibboleth.metadata.dom.saml.EntitiesDescriptorAssemblerStage"
+        p:id="createEntitiesDescriptorArchive">
+        <property name="descriptorName" ref="ts_archive_uri"/>
+    </bean>
+
+    <bean id="createEntitiesDescriptorSelf" class="net.shibboleth.metadata.dom.saml.EntitiesDescriptorAssemblerStage"
+        p:id="createEntitiesDescriptorSelf">
+        <property name="descriptorName" ref="ts_providers_uri"/>
+    </bean>
+
+    <bean id="validateSchema" class="net.shibboleth.metadata.dom.XMLSchemaValidationStage"
+        p:id="validateSchema">
+        <property name="schemaResources">
+            <util:list>
+                <bean class="net.shibboleth.utilities.java.support.resource.FilesystemResource">
+                    <constructor-arg ref="schemaDirectory" />
+                </bean>
+            </util:list>
+        </property>
+    </bean>
+    
+    <bean id="commonProcessing" class="net.shibboleth.metadata.pipeline.CompositeStage"
+        p:id="commonProcessing">
+        <property name="composedStages">
+            <util:list>
+                <ref bean="logItemErrors" />
+                <ref bean="termineOnInvalidSignature" />
+                <ref bean="validateValidUntil" />
+                <ref bean="disassembleEntitiesDescriptor" />
+                <ref bean="validateSchema" />
+            </util:list>
+        </property>
+    </bean>
+
+    <bean id="serializeProd" class="net.shibboleth.metadata.pipeline.SerializationStage"
+        p:id="serializeProd">
+        <property name="outputFile">
+            <bean class="java.io.File">
+                <constructor-arg ref="ts_prod_aggregate"/>
+            </bean>
+        </property>
+        <property name="serializer">
+            <bean id="domSerializer" class="net.shibboleth.metadata.dom.DOMElementSerializer" />
+        </property>
+    </bean>    
+     
+
+    <!--
+
+        Set up some pipelines 
+
+    -->
+
+    <!--
+
+    * Pipeline to create the current federation aggregate. 
+    * Testshib keeps an entity active for 30 days
+
+    -->
+    <bean id="prod" class="net.shibboleth.metadata.pipeline.SimplePipeline" init-method="initialize"
+        p:id="productionPipeline">
+        <property name="stages">
+            <list>
+                <ref bean="source"/>
+                <ref bean="disassemble"/>
+                <ref bean="removeInvalidContactPerson"/>
+                <ref bean="removeOrganization"/>
+                <ref bean="createEntitiesDescriptor"/>
+                <ref bean="generateContentReferenceId" />
+                <ref bean="serializeProd" />
+                
+                <ref bean="commonProcessing" />
+                <ref bean="serializeProd" />
+            </list>
+        </property>
+    </bean>
+
+    <!--
+
+    * Pipeline to create the current TestShib providers aggregate. 
+    * Our providers are idp.testshib.org and sp.testshib.org
+
+    -->
+    <bean id="ts_providers" class="net.shibboleth.metadata.pipeline.SimplePipeline" init-method="initialize">
+        <property name="id" value="providers_pipeline"/>
+        <property name="stages">
+            <list>
+                <ref bean="source"/>
+                <ref bean="removeInvalidContactPerson"/>
+                <ref bean="removeOrganization"/>
+                <ref bean="createEntitiesDescriptor"/>
+                <ref bean="generateContentReferenceId" />
+                <ref bean="serializeProd" />
+            </list>
+        </property>
+    </bean>
+
+    <!--
+
+    * Pipeline to create the archive aggregate. 
+    * This aggregate is not validated. This is a RAW EntitiesDescriptor aggregate
+    * (Subject to change) 
+
+    -->
+    <bean id="prod" class="net.shibboleth.metadata.pipeline.SimplePipeline" init-method="initialize"
+        p:id="productionPipeline">
+        <property name="stages">
+            <list>
+                <ref bean="source"/>
+                <ref bean="disassemble"/>
+                <ref bean="removeInvalidContactPerson"/>
+                <ref bean="removeOrganization"/>
+                <ref bean="createEntitiesDescriptor"/>
+                <ref bean="generateContentReferenceId" />
+                <ref bean="serializeProd" />
+            </list>
+        </property>
+    </bean>
+    
+</beans>

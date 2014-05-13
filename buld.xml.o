@@ -636,5 +636,57 @@
 			<arg value="${mdx.dir}/uk/check_authorities.pl"/>
 		</exec>
 	</target>
+
+	<!--
+		Utility to fold overlong embedded certificates.
+	-->
+	<target name="fold.embedded.certs">
+		<echo>Folding embedded certificates</echo>
+		<for param="file">
+			<path>
+				<fileset dir="${entities.dir}" includes="uk*.xml"/>
+			</path>
+			<sequential>
+				<exec executable="perl" dir="${entities.dir}">
+					<arg value="-i"/>
+					<arg value="${build.dir}/fold_cert.pl"/>
+					<arg value="@{file}"/>
+				</exec>
+			</sequential>
+		</for>
+	</target>
+	
+	<!--
+		Extract embedded certificates
+	-->
+	<target name="extract.embedded" depends="flow.uk.collect">
+		<echo>Extracting embedded certificates</echo>
+		<XALAN
+			i="${uk.collected}"
+			o="${xml.dir}/embedded.pem"
+			x="${build.dir}/extract_embedded.xsl"/>
+	</target>
+	
+	<!--
+		Check embedded certificates.
+	-->
+	<target name="check.embedded" depends="extract.embedded">
+		<echo>Checking embedded certificates</echo>
+		<exec executable="perl" dir="${xml.dir}"
+			input="${xml.dir}/embedded.pem">
+			<arg value="${build.dir}/check_embedded.pl"/>
+			<arg value="-q"/>
+		</exec>
+        <delete file="${xml.dir}/embedded.pem" quiet="true" verbose="false"/>
+	</target>
+	
+	<!--
+	   Check for IdPs using the single-port configuration.
+	-->
+	<target name="check.ports">
+		<echo>Checking vhost use</echo>
+        <CHANNEL.do verb="checkPorts" channel="uk"/>
+        <echo>Checked.</echo>
+	</target>
     
 </project>
