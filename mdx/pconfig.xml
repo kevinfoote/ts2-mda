@@ -23,6 +23,15 @@
 
     <bean id="domSerializer" class="net.shibboleth.metadata.dom.DOMElementSerializer" />
 
+    <bean id="component_parent" abstract="true" init-method="initialize"/>
+
+    <bean id="stage_parent" abstract="true" parent="component_parent"/>
+
+    <bean id="FileSystemResource" abstract="true" parent="component_parent"
+          class="net.shibboleth.utilities.java.support.resource.FilesystemResource"/>
+    <bean id="ClassPathResource" abstract="true" parent="component_parent"
+        class="net.shibboleth.utilities.java.support.resource.ClasspathResource"/>
+
     <util:list id="errorStatusClass">
         <value>#{T(net.shibboleth.metadata.ErrorStatus)}</value>
     </util:list>
@@ -37,7 +46,7 @@
         Define some Strings to use. 
     -->
     <bean id="schemaDirectory" parent="String"> 
-        <constructor-arg value="/opt/schema-files/" />
+        <constructor-arg value="/opt/schema-files/saml-schema-metadata-2.0.xsd" />
     </bean>
 
     <bean id="ts_federation_uri" parent="String">
@@ -160,8 +169,8 @@
         A pipeline stage that can be used before serialisation to normalise the namespaces
         used in an XML document.
     -->
-    <bean id="normaliseNamespaces" parent="XSLTransformationStage"
-        p:id="normaliseNamespaces">
+    <bean id="normalizeNamespaces" parent="XSLTransformationStage"
+        p:id="normalizeNamespaces">
         <property name="XSLResource">
             <bean parent="FileSystemResource">
                 <!--constructor-arg value="#{ systemProperties['basedir'] }/mdx/uk/ns_norm_uk.xsl"/-->
@@ -187,8 +196,6 @@
     </bean>
      
     <!-- 
-    <bean id="serializeArchive" class="net.shibboleth.metadata.pipeline.SerializationStage"
-        p:id="serializeArchive" p:outputFile-ref="ts_archive_aggregate" p:serializer-ref="domSerializer" />
     -->
 
     <!--
@@ -233,6 +240,27 @@
                 <ref bean="createEntitiesDescriptorSelf" />
                 <ref bean="normalizeNamespaces" />
                 <ref bean="serializeSelf" />
+            </list>
+        </property>
+    </bean>
+
+    <!--
+        * Pipeline to create the TestShib archived aggregate. 
+        * These are all entities that have joined TestShib.
+        * Warning this aggregate will be come very large. 
+    -->
+    <bean id="serializeArchive" class="net.shibboleth.metadata.pipeline.SerializationStage"
+        p:id="serializeArchive" p:outputFile-ref="ts_archive_aggregate" p:serializer-ref="domSerializer" />
+
+    <bean id="archive" class="net.shibboleth.metadata.pipeline.SimplePipeline" init-method="initialize"
+        p:id="archive">
+        <property name="stages">
+            <list>
+                <ref bean="readArchiveSource"/>
+                <ref bean="commonProcessing" />
+                <ref bean="createEntitiesDescriptorArchive" />
+                <ref bean="normalizeNamespaces" />
+                <ref bean="serializeArchive" />
             </list>
         </property>
     </bean>
