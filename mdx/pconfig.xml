@@ -92,8 +92,8 @@
     <bean id="readProductionSource" class="net.shibboleth.metadata.dom.DOMFilesystemSourceStage"
         p:id="readProductionSource" p:parserPool-ref="parserPool" p:source-ref="prod_mdSourceDir"/>
 
-    <bean id="readArchSource" class="net.shibboleth.metadata.dom.DOMFilesystemSourceStage"
-        p:id="readArchSource" p:parserPool-ref="parserPool" p:source-ref="archive_mdSourceDir"/>
+    <bean id="readArchiveSource" class="net.shibboleth.metadata.dom.DOMFilesystemSourceStage"
+        p:id="readArchiveSource" p:parserPool-ref="parserPool" p:source-ref="archive_mdSourceDir"/>
 
     <bean id="readSelfSource" class="net.shibboleth.metadata.dom.DOMFilesystemSourceStage"
         p:id="readSelfSource" p:parserPool-ref="parserPool" p:source-ref="self_mdSourceDir"/>
