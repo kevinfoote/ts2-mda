@@ -189,8 +189,6 @@
 	    MDNORM
 	    
 	    Macro to call tool to perform textual normalisation on an XML file
-	    containing a metadata aggregate.
-        
         Parameter 'i' is the file to be normalised; no assumption is made
         about its location so this must contain a full path.
 	-->
@@ -218,8 +216,6 @@
     <macrodef name="MDNORM.noblank">
         <attribute name="i"/><!-- input file -->
         <sequential>
-            <MDNORM i="@{i}">
-                <args>
                     <arg value="--discardBlankLines"/>
                 </args>
             </MDNORM>
@@ -571,70 +567,6 @@
                        x="${build.dir}/statistics_mdui.xsl"/>
 			</else>
 		</if>
-	</target>
-    
-	<!--
-		*******************************
-		***   M I S C E L L A N Y   ***
-		*******************************
-	-->
-	
-	<!--
-		Statistics generation
-		
-		Note that statistics are generated from the full registered fragment
-		data, so that the statistics process has access to information that will not
-		be included in published metadata.
-		
-		This target does stand-alone statistics generation; in normal use, the
-		statistics are generated as a side-effect of the generate target.
-	-->
-	<target name="stats">
-		<CHANNEL.do channel="uk" verb="statistics"/>
-		<fixcrlf file="${xml.dir}/ukfederation-stats.html" eol="lf"/>
-	</target>
-	
-	<!--
-		Check mailing list against current metadata
-	-->
-	<target name="check.mailing.list" depends="flow.uk.collect">
-		<echo>Checking mailing list entries.</echo>
-		<exec executable="perl" dir="${build.dir}">
-			<arg value="${build.dir}/addresses.pl"/>
-		</exec>
-	</target>
-	
-	<!--
-		Extract TLS locations from the UK federation metadata.
-	-->
-	<target name="extract.locs" depends="flow.uk.collect">
-		<echo>Extracting TLS locations</echo>
-		<exec executable="perl" dir="${build.dir}"
-			output="${build.dir}/locations.txt">
-			<arg value="${build.dir}/extract_locs.pl"/>
-		</exec>
-	</target>
-	
-	<!--
-		Extract authorities
-	-->
-	<target name="extract.authorities">
-		<echo>Extracting key authorities</echo>
-		<XALAN
-			i="${mdx.dir}/uk/trust-roots.xml"
-			o="${mdx.dir}/uk/authorities.pem"
-			x="${mdx.dir}/uk/extract_authorities.xsl"/>
-	</target>
-	
-	<!--
-		Check authorities
-	-->
-	<target name="check.authorities">
-		<echo>Checking authority certificates</echo>
-		<exec executable="perl" dir="${mdx.dir}/uk"
-			input="${mdx.dir}/uk/authorities.pem">
-			<arg value="${mdx.dir}/uk/check_authorities.pl"/>
-		</exec>
 	</target>
     
 </project>
