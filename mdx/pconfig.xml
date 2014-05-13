@@ -49,6 +49,7 @@
 
     <bean id="ts_archive_uri" parent="String">
         <constructor-arg value="http://www.testshib.org/fed/a"/>
+    </bean>
 
     <bean id="ts_prod_aggregate" parent="String">
         <constructor-arg value="/var/www/html/metadata.new/testshib-md-aggregate.xml"/>
