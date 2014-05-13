@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"    
-    default-init-method="initialize"
+
+<beans default-init-method="initialize"
+    xmlns="http://www.springframework.org/schema/beans"    
     xmlns:c="http://www.springframework.org/schema/c"
     xmlns:p="http://www.springframework.org/schema/p"
     xmlns:util="http://www.springframework.org/schema/util"
@@ -159,45 +160,11 @@
             </util:list>
         </property>
     </bean>
-
-    <!-- -->
-    <bean id="serializeProd" class="net.shibboleth.metadata.pipeline.SerializationStage"
-        p:id="serializeProd">
-        <property name="outputFile">
-            <bean class="java.io.File">
-                <constructor-arg ref="ts_prod_aggregate"/>
-            </bean>
-        </property>
-        <property name="serializer">
-            <bean id="domSerializer" class="net.shibboleth.metadata.dom.DOMElementSerializer" />
-        </property>
-    </bean>    
      
-    <!-- -->
+    <!-- 
     <bean id="serializeArchive" class="net.shibboleth.metadata.pipeline.SerializationStage"
-        p:id="serializeArchive">
-        <property name="outputFile">
-            <bean class="java.io.File">
-                <constructor-arg ref="ts_archive_aggregate"/>
-            </bean>
-        </property>
-        <property name="serializer">
-            <bean id="domSerializer" class="net.shibboleth.metadata.dom.DOMElementSerializer" />
-        </property>
-    </bean>    
-
-    <!-- -->
-    <bean id="serializeSelf" class="net.shibboleth.metadata.pipeline.SerializationStage"
-        p:id="serializeSelf">
-        <property name="outputFile">
-            <bean class="java.io.File">
-                <constructor-arg ref="ts_slef_aggregate"/>
-            </bean>
-        </property>
-        <property name="serializer">
-            <bean id="domSerializer" class="net.shibboleth.metadata.dom.DOMElementSerializer" />
-        </property>
-    </bean>    
+        p:id="serializeArchive" p:outputFile-ref="ts_archive_aggregate" p:serializer-ref="domSerializer" />
+    -->
 
     <!--
 
@@ -213,6 +180,9 @@
     * Testshib keeps an entity active for 30 days
 
     -->
+    <bean id="serializeProd" class="net.shibboleth.metadata.pipeline.SerializationStage"
+        p:id="serializeProd" p:outputFile-ref="ts_prod_aggregate" p:serializer-ref="domSerializer" />
+
     <bean id="production" class="net.shibboleth.metadata.pipeline.SimplePipeline" init-method="initialize"
         p:id="production">
         <property name="stages">
@@ -231,6 +201,9 @@
     * Our providers are idp.testshib.org and sp.testshib.org
 
     -->
+    <bean id="serializeSelf" class="net.shibboleth.metadata.pipeline.SerializationStage"
+        p:id="serializeSelf" p:outputFile-ref="ts_self_aggregate" p:serializer-ref="domSerializer" />
+
     <bean id="providers" class="net.shibboleth.metadata.pipeline.SimplePipeline" init-method="initialize"
         p:id="providers">
         <property name="stages">
