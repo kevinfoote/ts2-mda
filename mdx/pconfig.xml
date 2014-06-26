@@ -131,7 +131,7 @@
         class="net.shibboleth.metadata.dom.XSLValidationStage"/>
 
     <!-- -->
-    <bean id="removeEmptyContainer" abstract="true" parent="stage_parent"
+    <bean id="EmptyContainerStrippingStage" abstract="true" parent="stage_parent"
         class="net.shibboleth.metadata.dom.EmptyContainerStrippingStage"/>
 
 
@@ -189,7 +189,6 @@
                 <ref bean="disassembleEntitiesDescriptor" />
                 <!--ref bean="termineOnInvalidSignature" /-->
                 <!--ref bean="validateValidUntil" /-->
-                <ref bean="removeEmptyContainer"/>
                 <ref bean="removeInvalidContactPerson"/>
                 <ref bean="removeOrganization"/>
                 <ref bean="validateSchema" />
