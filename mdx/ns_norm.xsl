@@ -44,8 +44,6 @@
 	xmlns:mdui="urn:oasis:names:tc:SAML:metadata:ui"
 	xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
 	xmlns:shibmd="urn:mace:shibboleth:metadata:1.0"
-	xmlns:ukfedlabel="http://ukfederation.org.uk/2006/11/label"
-	xmlns:wayf="http://sdss.ac.uk/2006/06/WAYF"
 	
 	exclude-result-prefixes="md"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -173,18 +171,6 @@
 		</xsl:element>
 	</xsl:template>
 
-	<xsl:template match="ukfedlabel:*">
-		<xsl:element name="ukfedlabel:{local-name()}">
-			<xsl:apply-templates select="node()|@*"/>
-		</xsl:element>
-	</xsl:template>
-	
-	<xsl:template match="wayf:*">
-		<xsl:element name="wayf:{local-name()}">
-			<xsl:apply-templates select="node()|@*"/>
-		</xsl:element>
-	</xsl:template>
-	
 		
 	<!--
 		*********************************************
